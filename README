@@ -1,6 +1,12 @@
 Java client library for MogileFS (http://www.danga.com/mogilefs/). Code
 is mostly a copy of the perl client.
 
+This is a fork of eml's MogileFS Java client. 
+This client supports additional MogileFS client features such as list keys. 
+
+I am planning to clean up the source code; add generics, utilize JUnit testing,
+switch to slf4j logging and develop for Java 1.5+ and up features.
+
 Choose one of the classes in com.guba.mogilefs that implements
 the MogileFS interface:
 
