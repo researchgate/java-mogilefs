@@ -156,27 +156,6 @@ public class LocalFileMogileFSImpl implements MogileFS {
 		}
 	}
 
-	public Object[] listKeys(final String key) throws NoTrackersException {
-		throw new UnsupportedOperationException("Not supported.");
-	}
-
-	public Object[] listKeys(final String key, final int limit) throws NoTrackersException {
-		throw new UnsupportedOperationException("Not supported.");
-	}
-
-	/**
-	 * Return a list of keys matching your key. Return
-	 * null if there was an error from the server.
-	 * 
-	 * @param key
-	 * @return array of Strings that are keys
-	 * @throws NoTrackersException
-	 */
-	public Object[] listKeys(final String key, final String after, final int limit) throws NoTrackersException {
-		throw new UnsupportedOperationException("Not supported.");
-	}
-
-
 	public void rename(final String fromKey, final String toKey) throws NoTrackersException {
 		File fromFile = new File(domainDir, fromKey);
 		File toFile = new File(domainDir, toKey);
@@ -189,6 +168,26 @@ public class LocalFileMogileFSImpl implements MogileFS {
 		File storedFile = new File(domainDir, key);
 
 		return new String[] { "file://" + storedFile.getAbsolutePath() };
+	}
+
+	public Object[] listKeys(final String key) throws NoTrackersException {
+		throw new UnsupportedOperationException();
+	}
+
+	public Object[] listKeys(final String key, final int limit) throws NoTrackersException {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Return the after key and a list of keys matching your key. Return
+	 * null if there was an error from the server.
+	 * 
+	 * @param key
+	 * @return array of after key and array of keys
+	 * @throws NoTrackersException
+	 */
+	public Object[] listKeys(final String key, final String after, final int limit) throws NoTrackersException {
+		throw new UnsupportedOperationException();
 	}
 
 	public String getDomain() {

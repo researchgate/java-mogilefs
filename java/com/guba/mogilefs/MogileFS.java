@@ -133,7 +133,6 @@ public interface MogileFS {
 	public abstract String[] getPaths(String key, boolean noverify)
 	throws NoTrackersException;
 
-
 	public Object[] listKeys(final String key) throws NoTrackersException;
 
 	public Object[] listKeys(final String key, final int limit) throws NoTrackersException;
@@ -143,7 +142,7 @@ public interface MogileFS {
 	 * null if there was an error from the server.
 	 * 
 	 * @param key
-	 * @return Object[ String[], lastKey ]
+	 * @return array of after key and array of keys
 	 * @throws NoTrackersException
 	 */
 	public Object[] listKeys(final String key, final String after, final int limit) throws NoTrackersException;

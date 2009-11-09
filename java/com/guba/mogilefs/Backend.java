@@ -34,7 +34,7 @@ import org.apache.log4j.Logger;
  */
 class Backend {
 
-    private static Logger log = Logger.getLogger(Backend.class);
+    private static final Logger log = Logger.getLogger(Backend.class);
 
     private List hosts;
 
@@ -46,7 +46,7 @@ class Backend {
 
     private SocketWithReaderAndWriter cachedSocket;
 
-    private Pattern ERROR_PATTERN = Pattern.compile("^ERR\\s+(\\w+)\\s*(\\S*)");
+    private static final Pattern ERROR_PATTERN = Pattern.compile("^ERR\\s+(\\w+)\\s*(\\S*)");
 
     private static final int ERR_PART = 1;
 
@@ -60,16 +60,15 @@ class Backend {
      * Create the backend. Optionally connect to a tracker right now to ensure
      * one is available right off the bat.
      * 
-     * @param hostStrings
-     *            Array of hostnames of trackers
-     * @param connect
+     * @param trackers
+	 * 			List of tracker sockets
+     * @param connectNow
      *            if true, try to connect to a socket
      * 
      * @throws NoTrackersException
-     * @throws BadHostFormatException
      */
 
-    public Backend(List trackers, boolean connectNow)
+    public Backend(List<InetSocketAddress> trackers, boolean connectNow)
             throws NoTrackersException {
         reload(trackers, connectNow);
     }
@@ -78,13 +77,14 @@ class Backend {
      * Reset the list of trackers. Optionally try to connect to one of them
      * immediately.
      * 
-     * @param hostStrings
-     * @param connect
+	 * @param trackers
+	 * 			List of tracker sockets
+	 * @param connectNow
+	 *            if true, try to connect to a socket
      * @throws NoTrackersException
-     * @throws BadHostFormatException
      */
 
-    public void reload(List trackers, boolean connectNow)
+    public void reload(List<InetSocketAddress> trackers, boolean connectNow)
             throws NoTrackersException {
         this.hosts = trackers;
 
@@ -109,6 +109,7 @@ class Backend {
      * This function never returns null.
      * 
      * @return
+	 * @throws NoTrackersException
      */
 
     private SocketWithReaderAndWriter getSocket() throws NoTrackersException {
@@ -302,7 +303,7 @@ class Backend {
      */
 
     private String listKnownTrackers() {
-        StringBuffer trackers = new StringBuffer();
+        StringBuilder trackers = new StringBuilder();
         Iterator it = hosts.iterator();
         while (it.hasNext()) {
             InetSocketAddress host = (InetSocketAddress) it.next();
@@ -324,7 +325,7 @@ class Backend {
 
     private String encodeURLString(String[] args) {
         try {
-            StringBuffer encoded = new StringBuffer();
+            StringBuilder encoded = new StringBuilder();
 
             for (int i = 0; i < args.length; i += 2) {
                 String key = args[i];
@@ -356,7 +357,7 @@ class Backend {
      */
 
     private Map<String, String> decodeURLString(String encoded) {
-        HashMap<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<String, String>();
         try {
             if ((encoded == null) || (encoded.length() == 0))
                 return map;
