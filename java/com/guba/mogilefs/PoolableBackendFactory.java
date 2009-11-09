@@ -4,11 +4,12 @@ import java.net.InetSocketAddress;
 import java.util.List;
 
 import org.apache.commons.pool.PoolableObjectFactory;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PoolableBackendFactory implements PoolableObjectFactory {
 
-	private Logger log = Logger.getLogger(PoolableBackendFactory.class);
+	private static final Logger log = LoggerFactory.getLogger(PoolableObjectFactory.class);
 
 	private List<InetSocketAddress> trackers;
 

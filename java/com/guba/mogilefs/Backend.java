@@ -22,7 +22,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class talks to the trackers. It randomly connects to one of them, and
@@ -34,7 +35,7 @@ import org.apache.log4j.Logger;
  */
 class Backend {
 
-	private static final Logger log = Logger.getLogger(Backend.class);
+	private static final Logger log = LoggerFactory.getLogger(Backend.class);
 
 	private List<InetSocketAddress> hosts;
 

@@ -21,7 +21,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.pool.ObjectPool;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class is the interface for storing something into the PooledMogileFSImpl store.
@@ -35,7 +36,7 @@ import org.apache.log4j.Logger;
  */
 public class MogileOutputStream extends OutputStream {
 
-	private static Logger log = Logger.getLogger(MogileOutputStream.class);
+	private static final Logger log = LoggerFactory.getLogger(MogileOutputStream.class);
 
 	/**
 	 * Number of milliseconds we'll let this socket block before we consider it
@@ -213,7 +214,7 @@ public class MogileOutputStream extends OutputStream {
 			try {
 				out.close();
 			} catch (IOException ex) {
-				log.error(ex);
+				log.error(ex.getMessage(), ex);
 			}
 			out = null;
 		}
@@ -221,7 +222,7 @@ public class MogileOutputStream extends OutputStream {
 			try {
 				reader.close();
 			} catch (IOException ex) {
-				log.error(ex);
+				log.error(ex.getMessage(), ex);
 			}
 			reader = null;
 		}
@@ -229,7 +230,7 @@ public class MogileOutputStream extends OutputStream {
 			try {
 				socket.close();
 			} catch (IOException ex) {
-				log.error(ex);
+				log.error(ex.getMessage(), ex);
 			}
 			socket = null;
 		}
@@ -284,7 +285,7 @@ public class MogileOutputStream extends OutputStream {
 			return (Backend) backendPool.borrowObject();
 
 		} catch (Exception e) {
-			log.error(e);
+			log.error(e.getMessage(), e);
 			throw new NoTrackersException();
 		}
 	}
@@ -295,7 +296,7 @@ public class MogileOutputStream extends OutputStream {
 
 		} catch (Exception e) {
 			// I think we can ignore this.
-			log.warn(e);
+			log.warn(e.getMessage(), e);
 		}
 	}
 
@@ -305,7 +306,7 @@ public class MogileOutputStream extends OutputStream {
 
 		} catch (Exception e) {
 			// I think we can ignore this
-			log.warn(e);
+			log.warn(e.getMessage(), e);
 		}
 	}
 }

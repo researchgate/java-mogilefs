@@ -39,6 +39,7 @@ public class Mogtool {
 		private static final Pattern CONFIG_LINE = Pattern.compile("(\\w+)\\s*=\\s*(.+)");
 		private boolean verify = false;
 
+		@SuppressWarnings("static-access")
 		MogToolOptions() {
 			opts = new Options();
 			opts.addOption(withArgName("trackers").withLongOpt("trackers").hasArg().withDescription("list of trackers").create("t"));
@@ -49,7 +50,6 @@ public class Mogtool {
 
 
 			opts.addOption("h", false, "Show help");
-
 		}
 
 		String[] parse(final String[] argv) {

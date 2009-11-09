@@ -8,11 +8,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LocalFileMogileFSImpl implements MogileFS {
 
-	private Logger log = Logger.getLogger(LocalFileMogileFSImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(LocalFileMogileFSImpl.class);
 
 	private File topDir;
 

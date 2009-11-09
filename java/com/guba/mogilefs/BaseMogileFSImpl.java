@@ -20,11 +20,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.pool.ObjectPool;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class BaseMogileFSImpl implements MogileFS {
 
-	protected Logger log = Logger.getLogger(BaseMogileFSImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(BaseMogileFSImpl.class);
 
 	private String domain;
 
@@ -434,7 +435,7 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 				return;
 
 			} catch (TrackerCommunicationException e) {
-				log.warn(e);
+				log.warn(e.getMessage(), e);
 
 				// don't use this any more
 				if (backend != null) {
@@ -508,7 +509,7 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 				return;
 
 			} catch (TrackerCommunicationException e) {
-				log.warn(e);
+				log.warn(e.getMessage(), e);
 
 				if (backend != null) {
 					invalidateBackend(backend);
@@ -565,7 +566,7 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 				return paths;
 
 			} catch (TrackerCommunicationException e) {
-				log.warn(e);
+				log.warn(e.getMessage(), e);
 
 				if (backend != null) {
 					invalidateBackend(backend);
@@ -627,7 +628,7 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 				return new Object[] { retKeys, response.get("after_key") };
 
 			} catch (TrackerCommunicationException e) {
-				log.warn(e);
+				log.warn(e.getMessage(), e);
 
 				if (backend != null) {
 					invalidateBackend(backend);
