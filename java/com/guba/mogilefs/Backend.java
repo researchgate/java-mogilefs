@@ -34,464 +34,473 @@ import org.apache.log4j.Logger;
  */
 class Backend {
 
-    private static final Logger log = Logger.getLogger(Backend.class);
+	private static final Logger log = Logger.getLogger(Backend.class);
 
-    private List hosts;
+	private List<InetSocketAddress> hosts;
 
-    private Map<InetSocketAddress, Long> deadHosts;
+	private Map<InetSocketAddress, Long> deadHosts;
 
-    private String lastErr;
+	private String lastErr;
 
-    private String lastErrStr;
+	private String lastErrStr;
 
-    private SocketWithReaderAndWriter cachedSocket;
+	private SocketWithReaderAndWriter cachedSocket;
 
-    private static final Pattern ERROR_PATTERN = Pattern.compile("^ERR\\s+(\\w+)\\s*(\\S*)");
+	private static final Pattern ERROR_PATTERN = Pattern.compile("^ERR\\s+(\\w+)\\s*(\\S*)");
 
-    private static final int ERR_PART = 1;
+	private static final int ERR_PART = 1;
 
-    private static final int ERRSTR_PART = 2;
+	private static final int ERRSTR_PART = 2;
 
-    private Pattern OK_PATTERN = Pattern.compile("^OK\\s+\\d*\\s*(\\S*)");
+	private Pattern OK_PATTERN = Pattern.compile("^OK\\s+\\d*\\s*(\\S*)");
 
-    private static final int ARGS_PART = 1;
+	private static final int ARGS_PART = 1;
 
-    /**
-     * Create the backend. Optionally connect to a tracker right now to ensure
-     * one is available right off the bat.
-     * 
-     * @param trackers
-	 * 			List of tracker sockets
-     * @param connectNow
-     *            if true, try to connect to a socket
-     * 
-     * @throws NoTrackersException
-     */
-
-    public Backend(List<InetSocketAddress> trackers, boolean connectNow)
-            throws NoTrackersException {
-        reload(trackers, connectNow);
-    }
-
-    /**
-     * Reset the list of trackers. Optionally try to connect to one of them
-     * immediately.
-     * 
+	/**
+	 * Create the backend. Optionally connect to a tracker right now to ensure
+	 * one is available right off the bat.
+	 * 
 	 * @param trackers
 	 * 			List of tracker sockets
 	 * @param connectNow
 	 *            if true, try to connect to a socket
-     * @throws NoTrackersException
-     */
-
-    public void reload(List<InetSocketAddress> trackers, boolean connectNow)
-            throws NoTrackersException {
-        this.hosts = trackers;
-
-        if (hosts.size() == 0)
-            throw new NoTrackersException();
-
-        this.deadHosts = new HashMap<InetSocketAddress, Long>();
-
-        this.lastErr = null;
-        this.lastErrStr = null;
-
-        cachedSocket = null;
-        if (connectNow)
-            cachedSocket = getSocket();
-    }
-
- 
-    /**
-     * Randomly pick from our list of hosts and try to connect to one of them.
-     * If we get an error connecting to a host, then make a note that it is
-     * dead. If we can't connect to any host, throw a 'NoTrackersException'.
-     * This function never returns null.
-     * 
-     * @return
+	 * 
 	 * @throws NoTrackersException
-     */
+	 */
 
-    private SocketWithReaderAndWriter getSocket() throws NoTrackersException {
-        int hostSize = hosts.size();
-        int tries = (hostSize > 15) ? 15 : hostSize;
-        int index = (int) Math.floor(hosts.size() * Math.random());
+	public Backend(final List<InetSocketAddress> trackers, final boolean connectNow)
+	throws NoTrackersException {
+		reload(trackers, connectNow);
+	}
 
-        long now = System.currentTimeMillis();
-        while (tries-- > 0) {
-            InetSocketAddress host = (InetSocketAddress) hosts.get(index++
-                    % hostSize);
+	/**
+	 * Reset the list of trackers. Optionally try to connect to one of them
+	 * immediately.
+	 * 
+	 * @param trackers
+	 * 			List of tracker sockets
+	 * @param connectNow
+	 *            if true, try to connect to a socket
+	 * @throws NoTrackersException
+	 */
 
-            // try dead hosts every 5 seconds
-            Long deadTime = (Long) deadHosts.get(host);
-            if ((deadTime != null) && (deadTime.longValue() > (now - 5000))) {
-                if (log.isDebugEnabled()) {
-                    log.debug(" skipping connect attempt to dead host " + host);
-                }
-                continue;
-            }
+	public void reload(final List<InetSocketAddress> trackers, final boolean connectNow)
+	throws NoTrackersException {
+		this.hosts = trackers;
 
-            try {
-                // connect to the server
-                Socket socket = new Socket();
-                // 30 second timeout
-                socket.setSoTimeout(30000);
-                socket.connect(host, 3000);
+		if (hosts.size() == 0) {
+			throw new NoTrackersException();
+		}
 
-                if (log.isDebugEnabled()) {
-                    log.debug("connected to tracker " + socket.getInetAddress().getHostName());
-                }
-                
-                // if we made it here, then the connection is good!
-                return new SocketWithReaderAndWriter(socket);
+		this.deadHosts = new HashMap<InetSocketAddress, Long>();
 
-            } catch (IOException e) {
-                log.warn("Unable to connect to tracker at " +
-                 host.toString(), e);
+		this.lastErr = null;
+		this.lastErrStr = null;
 
-            } catch (IllegalBlockingModeException e) {
-                log.warn("Unable to connect to tracker at " +
-                 host.toString(), e);
+		cachedSocket = null;
+		if (connectNow) {
+			cachedSocket = getSocket();
+		}
+	}
 
-            } catch (IllegalArgumentException e) {
-                log.warn("Unable to connect to tracker " + host.toString(),
-                 e);
 
-            }
+	/**
+	 * Randomly pick from our list of hosts and try to connect to one of them.
+	 * If we get an error connecting to a host, then make a note that it is
+	 * dead. If we can't connect to any host, throw a 'NoTrackersException'.
+	 * This function never returns null.
+	 * 
+	 * @return
+	 * @throws NoTrackersException
+	 */
 
-            // something went wrong, so mark the host as dead
-            log.warn("marking host " + host + " as dead");
-            deadHosts.put(host, new Long(now));
-        }
+	private SocketWithReaderAndWriter getSocket() throws NoTrackersException {
+		int hostSize = hosts.size();
+		int tries = (hostSize > 15) ? 15 : hostSize;
+		int index = (int) Math.floor(hosts.size() * Math.random());
 
-        // didn't find anything! throw an exception!
-        throw new NoTrackersException();
-    }
+		long now = System.currentTimeMillis();
+		while (tries-- > 0) {
+			InetSocketAddress host = hosts.get(index++
+					% hostSize);
 
-    /**
-     * Send a request to the tracker. Call it like this: Map result =
-     * doRequest("command", new String[] { "arg1", "value1", "arg2", "value2"
-     * });
-     * 
-     * @throws NoTrackersException
-     *             thrown if we can't get ahold of a tracker
-     * @param command
-     * @param args
-     *            Optional arguments. May be null. This is a hash mapped to an
-     *            array of strings.
-     * @return null on error, otherwise results of command
-     */
+			// try dead hosts every 5 seconds
+			Long deadTime = deadHosts.get(host);
+			if ((deadTime != null) && (deadTime.longValue() > (now - 5000))) {
+				if (log.isDebugEnabled()) {
+					log.debug(" skipping connect attempt to dead host " + host);
+				}
+				continue;
+			}
 
-    public Map doRequest(String command, String[] args)
-            throws NoTrackersException, TrackerCommunicationException {
-        if ((command == null) || (args == null)) {
-            log.error("null command or args sent to doRequest");
-            return null;
-        }
+			try {
+				// connect to the server
+				Socket socket = new Socket();
+				// 30 second timeout
+				socket.setSoTimeout(30000);
+				socket.connect(host, 3000);
 
-        String argString = encodeURLString(args);
-        String request = command + " " + argString + "\r\n";
+				if (log.isDebugEnabled()) {
+					log.debug("connected to tracker " + socket.getInetAddress().getHostName());
+				}
 
-        if (log.isDebugEnabled()) {
-            log.debug("command: "+ request);
-        }
-        
-        if (cachedSocket != null) {
-            // try our cached socket, but assume it might be bogus
-            try {
-                cachedSocket.getWriter().write(request);
-                cachedSocket.getWriter().flush();
+				// if we made it here, then the connection is good!
+				return new SocketWithReaderAndWriter(socket);
 
-            } catch (IOException e) {
-                log.debug("cached socket went bad while sending request");
-                cachedSocket = null;
-            }
-        }
+			} catch (IOException e) {
+				log.warn("Unable to connect to tracker at " +
+						host.toString(), e);
 
-        if (cachedSocket == null) {
-            // Either we don't have a cached socket, or the existing cached
-            // socket
-            // didn't work. Try to connect to another server.
-            SocketWithReaderAndWriter socket = getSocket();
+			} catch (IllegalBlockingModeException e) {
+				log.warn("Unable to connect to tracker at " +
+						host.toString(), e);
 
-            try {
-                socket.getWriter().write(request);
-                socket.getWriter().flush();
+			} catch (IllegalArgumentException e) {
+				log.warn("Unable to connect to tracker " + host.toString(),
+						e);
 
-            } catch (IOException e) {
-                throw new TrackerCommunicationException(
-                        "problem finding a working tracker in this list: "
-                                + listKnownTrackers());
+			}
 
-            }
+			// something went wrong, so mark the host as dead
+			log.warn("marking host " + host + " as dead");
+			deadHosts.put(host, new Long(now));
+		}
 
-            cachedSocket = socket;
-        }
+		// didn't find anything! throw an exception!
+		throw new NoTrackersException();
+	}
 
-        try {
-            // ok - we finally got a message off to a tracker
-            // now get a response
-            String response = cachedSocket.getReader().readLine();
+	/**
+	 * Send a request to the tracker. Call it like this: Map result =
+	 * doRequest("command", new String[] { "arg1", "value1", "arg2", "value2"
+	 * });
+	 * 
+	 * @throws NoTrackersException
+	 *             thrown if we can't get ahold of a tracker
+	 * @param command
+	 * @param args
+	 *            Optional arguments. May be null. This is a hash mapped to an
+	 *            array of strings.
+	 * @return null on error, otherwise results of command
+	 */
 
-            if (response == null)
-                throw new TrackerCommunicationException(
-                        "received null response from tracker at "
-                                + cachedSocket.getSocket().getInetAddress());
+	public Map<String,String> doRequest(final String command, final String[] args)
+	throws NoTrackersException, TrackerCommunicationException {
+		if ((command == null) || (args == null)) {
+			log.error("null command or args sent to doRequest");
+			return null;
+		}
 
-            if (log.isDebugEnabled()) {
-                log.debug("response: " + response);
-            }
-            
-            Matcher ok = OK_PATTERN.matcher(response);
-            if (ok.matches()) {
-                // good response
-                return decodeURLString(ok.group(ARGS_PART));
-            }
+		String argString = encodeURLString(args);
+		String request = command + " " + argString + "\r\n";
 
-            Matcher err = ERROR_PATTERN.matcher(response);
-            if (err.matches()) {
-                // error response
-                lastErr = err.group(ERR_PART);
-                lastErrStr = err.group(ERRSTR_PART);
+		if (log.isDebugEnabled()) {
+			log.debug("command: "+ request);
+		}
 
-                if (log.isDebugEnabled())
-                    log.debug("error message from tracker: " + lastErr + ", " + lastErrStr);
-                
-                return null;
-            }
+		if (cachedSocket != null) {
+			// try our cached socket, but assume it might be bogus
+			try {
+				cachedSocket.getWriter().write(request);
+				cachedSocket.getWriter().flush();
 
-            throw new TrackerCommunicationException(
-                    "invalid server response from "
-                            + cachedSocket.getSocket().getInetAddress() + ": "
-                            + response);
+			} catch (IOException e) {
+				log.debug("cached socket went bad while sending request");
+				cachedSocket = null;
+			}
+		}
 
-        } catch (IOException e) {
-            // problem reading the response
-            log.warn("problem reading response from server (" +
-             cachedSocket.getSocket().getInetAddress() + ")", e);
+		if (cachedSocket == null) {
+			// Either we don't have a cached socket, or the existing cached
+			// socket
+			// didn't work. Try to connect to another server.
+			SocketWithReaderAndWriter socket = getSocket();
 
-            throw new TrackerCommunicationException(
-                    "problem talking to server at "
-                            + cachedSocket.getSocket().getInetAddress(), e);
-        }
-    }
+			try {
+				socket.getWriter().write(request);
+				socket.getWriter().flush();
 
-    /**
-     * Return the last error code.
-     * 
-     * @return
-     */
+			} catch (IOException e) {
+				throw new TrackerCommunicationException(
+						"problem finding a working tracker in this list: "
+						+ listKnownTrackers());
 
-    public String getLastErr() {
-        return lastErr;
-    }
+			}
 
-    /**
-     * Return the last descriptive string associated with the last error
-     * 
-     * @return
-     */
+			cachedSocket = socket;
+		}
 
-    public String getLastErrStr() {
-        return lastErrStr;
-    }
+		try {
+			// ok - we finally got a message off to a tracker
+			// now get a response
+			String response = cachedSocket.getReader().readLine();
 
-    /**
-     * Make sexy string that lists all the trackers we know about.
-     * 
-     * @return
-     */
+			if (response == null) {
+				throw new TrackerCommunicationException(
+						"received null response from tracker at "
+						+ cachedSocket.getSocket().getInetAddress());
+			}
 
-    private String listKnownTrackers() {
-        StringBuilder trackers = new StringBuilder();
-        Iterator it = hosts.iterator();
-        while (it.hasNext()) {
-            InetSocketAddress host = (InetSocketAddress) it.next();
+			if (log.isDebugEnabled()) {
+				log.debug("response: " + response);
+			}
 
-            if (trackers.length() > 0)
-                trackers.append(", ");
-            trackers.append(host.toString());
-        }
+			Matcher ok = OK_PATTERN.matcher(response);
+			if (ok.matches()) {
+				// good response
+				return decodeURLString(ok.group(ARGS_PART));
+			}
 
-        return trackers.toString();
-    }
+			Matcher err = ERROR_PATTERN.matcher(response);
+			if (err.matches()) {
+				// error response
+				lastErr = err.group(ERR_PART);
+				lastErrStr = err.group(ERRSTR_PART);
 
-    /**
-     * Encode a map of key, value pairs into a URL format
-     * 
-     * @param args
-     * @return never returns null, unless java has a problem encoding UTF-8
-     */
+				if (log.isDebugEnabled()) {
+					log.debug("error message from tracker: " + lastErr + ", " + lastErrStr);
+				}
 
-    private String encodeURLString(String[] args) {
-        try {
-            StringBuilder encoded = new StringBuilder();
+				return null;
+			}
 
-            for (int i = 0; i < args.length; i += 2) {
-                String key = args[i];
-                String value = args[i + 1];
+			throw new TrackerCommunicationException(
+					"invalid server response from "
+					+ cachedSocket.getSocket().getInetAddress() + ": "
+					+ response);
 
-                if (encoded.length() > 0)
-                    encoded.append("&");
-                encoded.append(key);
-                encoded.append("=");
-                encoded.append(URLEncoder.encode(value, "UTF-8"));
-            }
+		} catch (IOException e) {
+			// problem reading the response
+			log.warn("problem reading response from server (" +
+					cachedSocket.getSocket().getInetAddress() + ")", e);
 
-            return encoded.toString();
+			throw new TrackerCommunicationException(
+					"problem talking to server at "
+					+ cachedSocket.getSocket().getInetAddress(), e);
+		}
+	}
 
-        } catch (UnsupportedEncodingException e) {
-            log.error("problem encoding URL for tracker", e);
+	/**
+	 * Return the last error code.
+	 * 
+	 * @return
+	 */
 
-            // what to return here... this really shouldn't happen
-            return null;
-        }
-    }
+	public String getLastErr() {
+		return lastErr;
+	}
 
-    /**
-     * Decode a urlencoded string into a bunch of (key, value) pairs
-     * 
-     * @param encoded
-     * @return only returns null if java has a problem decoding UTF-8, which
-     *         should never happen
-     */
+	/**
+	 * Return the last descriptive string associated with the last error
+	 * 
+	 * @return
+	 */
 
-    private Map<String, String> decodeURLString(String encoded) {
-        Map<String, String> map = new HashMap<String, String>();
-        try {
-            if ((encoded == null) || (encoded.length() == 0))
-                return map;
+	public String getLastErrStr() {
+		return lastErrStr;
+	}
 
-            String parts[] = encoded.split("&");
-            for (int i = 0; i < parts.length; i++) {
-                String pair[] = parts[i].split("=");
+	/**
+	 * Make sexy string that lists all the trackers we know about.
+	 * 
+	 * @return
+	 */
 
-                if ((pair == null) || (pair.length != 2)) {
-                    log.error("poorly encoded string: "+ encoded);
-                    continue;
-                }
+	private String listKnownTrackers() {
+		StringBuilder trackers = new StringBuilder();
+		Iterator<InetSocketAddress> it = hosts.iterator();
+		while (it.hasNext()) {
+			InetSocketAddress host = it.next();
 
-                map.put(pair[0], URLDecoder.decode(pair[1], "UTF-8"));
-            }
+			if (trackers.length() > 0) {
+				trackers.append(", ");
+			}
+			trackers.append(host.toString());
+		}
 
-            return map;
+		return trackers.toString();
+	}
 
-        } catch (UnsupportedEncodingException e) {
-            log.error("problem decoding URL from tracker", e);
+	/**
+	 * Encode a map of key, value pairs into a URL format
+	 * 
+	 * @param args
+	 * @return never returns null, unless java has a problem encoding UTF-8
+	 */
 
-            return null;
-        }
-    }
-    
-    /**
-     * Retrieve the name of the tracker we're talking
-     * to. Might return null.
-     * 
-     * @return
-     */
-    
-    public String getTracker() {
-        if (cachedSocket == null)
-            return null;
-        
-        return cachedSocket.getTracker();
-    }
-    
-    /**
-     * Close any open connections we've got
-     * 
-     */
-    
-    public void destroy() {
-        if (cachedSocket != null) {
-            try {
-                cachedSocket.getSocket().close();
-            } catch (IOException e) {
-                // ignore
-            }
-        }
-    }
-    
-    /**
-     * Return true if we're connected to a remote backend
-     */
-    
-    public boolean isConnected() {
-    	return ((cachedSocket != null) && (cachedSocket.getSocket().isConnected()));
-    }
+	private String encodeURLString(final String[] args) {
+		try {
+			StringBuilder encoded = new StringBuilder();
+
+			for (int i = 0; i < args.length; i += 2) {
+				String key = args[i];
+				String value = args[i + 1];
+
+				if (encoded.length() > 0) {
+					encoded.append("&");
+				}
+				encoded.append(key);
+				encoded.append("=");
+				encoded.append(URLEncoder.encode(value, "UTF-8"));
+			}
+
+			return encoded.toString();
+
+		} catch (UnsupportedEncodingException e) {
+			log.error("problem encoding URL for tracker", e);
+
+			// what to return here... this really shouldn't happen
+			return null;
+		}
+	}
+
+	/**
+	 * Decode a urlencoded string into a bunch of (key, value) pairs
+	 * 
+	 * @param encoded
+	 * @return only returns null if java has a problem decoding UTF-8, which
+	 *         should never happen
+	 */
+
+	private Map<String, String> decodeURLString(final String encoded) {
+		Map<String, String> map = new HashMap<String, String>();
+		try {
+			if ((encoded == null) || (encoded.length() == 0)) {
+				return map;
+			}
+
+			String parts[] = encoded.split("&");
+			for (int i = 0; i < parts.length; i++) {
+				String pair[] = parts[i].split("=");
+
+				if ((pair == null) || (pair.length != 2)) {
+					log.error("poorly encoded string: "+ encoded);
+					continue;
+				}
+
+				map.put(pair[0], URLDecoder.decode(pair[1], "UTF-8"));
+			}
+
+			return map;
+
+		} catch (UnsupportedEncodingException e) {
+			log.error("problem decoding URL from tracker", e);
+
+			return null;
+		}
+	}
+
+	/**
+	 * Retrieve the name of the tracker we're talking
+	 * to. Might return null.
+	 * 
+	 * @return
+	 */
+
+	public String getTracker() {
+		if (cachedSocket == null) {
+			return null;
+		}
+
+		return cachedSocket.getTracker();
+	}
+
+	/**
+	 * Close any open connections we've got
+	 * 
+	 */
+
+	public void destroy() {
+		if (cachedSocket != null) {
+			try {
+				cachedSocket.getSocket().close();
+			} catch (IOException e) {
+				// ignore
+			}
+		}
+	}
+
+	/**
+	 * Return true if we're connected to a remote backend
+	 */
+
+	public boolean isConnected() {
+		return ((cachedSocket != null) && (cachedSocket.getSocket().isConnected()));
+	}
 }
 
 /**
  * @author ericlambrecht
- *  
+ * 
  */
 
 class SocketWithReaderAndWriter {
 
-    private Socket socket;
+	private Socket socket;
 
-    private BufferedReader reader;
+	private BufferedReader reader;
 
-    private Writer writer;
+	private Writer writer;
 
-    public SocketWithReaderAndWriter(Socket socket) throws IOException {
-        this.socket = socket;
-        this.reader = new BufferedReader(new InputStreamReader(socket
-                .getInputStream()));
-        this.writer = new OutputStreamWriter(socket.getOutputStream());
-    }
+	public SocketWithReaderAndWriter(final Socket socket) throws IOException {
+		this.socket = socket;
+		this.reader = new BufferedReader(new InputStreamReader(socket
+				.getInputStream()));
+		this.writer = new OutputStreamWriter(socket.getOutputStream());
+	}
 
-    /**
-     * @return Returns the reader.
-     */
-    public BufferedReader getReader() {
-        return reader;
-    }
+	/**
+	 * @return Returns the reader.
+	 */
+	public BufferedReader getReader() {
+		return reader;
+	}
 
-    /**
-     * @return Returns the socket.
-     */
-    public Socket getSocket() {
-        return socket;
-    }
+	/**
+	 * @return Returns the socket.
+	 */
+	public Socket getSocket() {
+		return socket;
+	}
 
-    /**
-     * @return Returns the writer.
-     */
-    public Writer getWriter() {
-        return writer;
-    }
+	/**
+	 * @return Returns the writer.
+	 */
+	public Writer getWriter() {
+		return writer;
+	}
 
-    /**
-     * Make sure the socket is closed
-     */
-    
-    public void close() {
-    	if (socket != null) {
-    		try {
-    			socket.close();
-    		} catch (IOException e) {
-    			// ignore
-    		}
-    	}
-    }
-    
-    /**
-     * Make sure we close out any open connections
-     * 
-     */
-    
-    protected void finalize() {
-    	close();
-    }
-    
-    /**
-     * Return the name of the tracker we're talking to
-     * 
-     * @return
-     */
-    public String getTracker() {
-        return socket.getInetAddress().getHostName();
-    }
+	/**
+	 * Make sure the socket is closed
+	 */
+
+	public void close() {
+		if (socket != null) {
+			try {
+				socket.close();
+			} catch (IOException e) {
+				// ignore
+			}
+		}
+	}
+
+	/**
+	 * Make sure we close out any open connections
+	 * 
+	 */
+
+	@Override
+	protected void finalize() {
+		close();
+	}
+
+	/**
+	 * Return the name of the tracker we're talking to
+	 * 
+	 * @return
+	 */
+	public String getTracker() {
+		return socket.getInetAddress().getHostName();
+	}
 
 }

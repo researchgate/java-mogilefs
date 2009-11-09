@@ -137,7 +137,7 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 			// get a backend
 			backend = borrowBackend();
 
-			Map response = backend.doRequest("create_open", new String[] {
+			Map<String,String> response = backend.doRequest("create_open", new String[] {
 					"domain", domain, "class", storageClass, "key", key });
 
 			if (response == null) {
@@ -150,8 +150,8 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 			}
 
 			try {
-				return new MogileOutputStream(getBackendPool(), domain, (String) response.get("fid"), (String) response.get("path"),
-						(String) response.get("devid"), key,
+				return new MogileOutputStream(getBackendPool(), domain, response.get("fid"), response.get("path"),
+						response.get("devid"), key,
 						byteCount);
 
 			} catch (MalformedURLException e) {
@@ -209,7 +209,7 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 			try {
 				backend = borrowBackend();
 
-				Map response = backend.doRequest("create_open", new String[] {
+				Map<String,String> response = backend.doRequest("create_open", new String[] {
 						"domain", domain, "class", storageClass, "key", key });
 
 				if (response == null) {
@@ -219,8 +219,8 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 				} else {
 					try {
 						MogileOutputStream out = new MogileOutputStream(getBackendPool(), domain,
-								(String) response.get("fid"),
-								(String) response.get("path"), (String) response
+								response.get("fid"),
+								response.get("path"), response
 								.get("devid"), key, file.length());
 						try {
 							FileInputStream in = new FileInputStream(file);
@@ -548,17 +548,17 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 			try {
 				backend = borrowBackend();
 
-				Map response = backend.doRequest("get_paths", new String[] { "domain",
+				Map<String,String> response = backend.doRequest("get_paths", new String[] { "domain",
 						domain, "key", key, "noverify", (noverify ? "1" : "0") });
 
 				if (response == null) {
 					return null;
 				}
 
-				int pathCount = Integer.parseInt((String) response.get("paths"));
+				int pathCount = Integer.parseInt(response.get("paths"));
 				String[] paths = new String[pathCount];
 				for (int i = 1; i <= pathCount; i++) {
-					String path = (String) response.get("path" + i);
+					String path = response.get("path" + i);
 					paths[i - 1] = path;
 				}
 
@@ -610,17 +610,17 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 			try {
 				backend = borrowBackend();
 
-				Map response = backend.doRequest("list_keys", new String[] { "domain",
+				Map<String,String> response = backend.doRequest("list_keys", new String[] { "domain",
 						domain, "prefix", key, "after", after == null ? "" : after });
 
 				if (response == null) {
 					return null;
 				}
 
-				int keyCount = Integer.parseInt((String)response.get("key_count"));
+				int keyCount = Integer.parseInt(response.get("key_count"));
 				String[] retKeys = new String[keyCount];
 				for(int i = 1; i <= keyCount; i++) {
-					String retKey = (String) response.get("key_"+i);
+					String retKey = response.get("key_"+i);
 					retKeys[i - 1] = retKey;
 				}
 

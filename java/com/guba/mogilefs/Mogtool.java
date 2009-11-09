@@ -1,16 +1,27 @@
 
 package com.guba.mogilefs;
-import java.io.*;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-import java.text.MessageFormat;
+import static org.apache.commons.cli.OptionBuilder.withArgName;
+import static org.apache.commons.cli.OptionBuilder.withDescription;
 
-import org.apache.commons.cli.*;
-import static org.apache.commons.cli.OptionBuilder.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
 
 
 /**
@@ -24,7 +35,6 @@ public class Mogtool {
 		String [] trackers;
 		String storageClass;
 		String domain;
-		boolean verbose = false;
 		private Options opts;
 		private static final Pattern CONFIG_LINE = Pattern.compile("(\\w+)\\s*=\\s*(.+)");
 		private boolean verify = false;
@@ -42,7 +52,7 @@ public class Mogtool {
 
 		}
 
-		String[] parse(String[] argv) {
+		String[] parse(final String[] argv) {
 			CommandLineParser parser = new PosixParser();
 
 			boolean fail = false;
@@ -81,19 +91,19 @@ public class Mogtool {
 			return line.getArgs();
 		}
 
-		private void setVerify(String ver) {
+		private void setVerify(final String ver) {
 			if (ver != null) {
 				verify = true;
 			}
 		}
 
-		private void setDomain(String val) {
+		private void setDomain(final String val) {
 			if (val != null) {
 				domain = val;
 			}
 		}
 
-		private void setTrackers(String val) {
+		private void setTrackers(final String val) {
 			if (val != null) {
 				trackers = val.split("\\s*,\\s*");
 			}
@@ -105,7 +115,7 @@ public class Mogtool {
 			}
 		}
 
-       private List<String> getConfigFiles(CommandLine line) {
+		private List<String> getConfigFiles(final CommandLine line) {
 			List<String> ret = new LinkedList<String>();
 			ret.add(line.getOptionValue("conf"));
 			ret.add(System.getenv("HOME") + "/.mogtool");
@@ -114,7 +124,7 @@ public class Mogtool {
 			return ret;
 		}
 
-		private Map<String, String> readConfigfiles(List<String> files) {
+		private Map<String, String> readConfigfiles(final List<String> files) {
 			Map<String, String> ret = new HashMap<String, String>();
 
 			for (String file : files) {
@@ -126,7 +136,7 @@ public class Mogtool {
 			return ret;
 		}
 
-		private void parseFile(Map<String, String> ret, String file) {
+		private void parseFile(final Map<String, String> ret, final String file) {
 			try {
 				BufferedReader r = new BufferedReader(new FileReader(file));
 
@@ -152,22 +162,22 @@ public class Mogtool {
 		public void showUsage() {
 			HelpFormatter formatter = new HelpFormatter();
 			formatter.printHelp("mogTool <command> ...", "", opts, "\nCommand is one of:\n" +
-				"- inject thefile.tgz thefilekey\n" +
-				"- extract thefilekey thenewfile.tgz\n" +
-				"- delete thekey\n" +
-				"- locate thekey\n" +
-				"- listkey - TODO\n" +
-				"Just like in the perl mogtool but without bigfiles.");
+					"- inject thefile.tgz thefilekey\n" +
+					"- extract thefilekey thenewfile.tgz\n" +
+					"- delete thekey\n" +
+					"- locate thekey\n" +
+					"- listkey - TODO\n" +
+			"Just like in the perl mogtool but without bigfiles.");
 
 
 
 		}
 
 		protected MogileFS createMogileFS() throws NoTrackersException, BadHostFormatException {
-            final PooledMogileFSImpl mogFs = new PooledMogileFSImpl(domain, trackers, 5, 2, 30000);
+			final PooledMogileFSImpl mogFs = new PooledMogileFSImpl(domain, trackers, 5, 2, 30000);
 			// The Perl mogTool doesn't retry if it breaks.
-            mogFs.setMaxRetries(0);
-            return mogFs;
+			mogFs.setMaxRetries(0);
+			return mogFs;
 		}
 
 		public String getStorageClass() {
@@ -183,7 +193,7 @@ public class Mogtool {
 	/**
 	 * @param argv The command line.
 	 */
-	public static void main(String[] argv) {
+	public static void main(final String[] argv) {
 		MogToolOptions options = new MogToolOptions();
 
 		String[] args = options.parse(argv);
@@ -262,12 +272,12 @@ public class Mogtool {
 		}
 	}
 
-	private static void extract(String key, String file, MogileFS mogileFS) throws IOException, StorageCommunicationException, TrackerCommunicationException, NoTrackersException {
+	private static void extract(final String key, final String file, final MogileFS mogileFS) throws IOException, StorageCommunicationException, TrackerCommunicationException, NoTrackersException {
 		mogileFS.getFile(key, new File(file));
 	}
 
 
-	public static void inject(String key, String storageClass, String filename, final MogileFS mogileFS) throws MogileException {
+	public static void inject(final String key, final String storageClass, final String filename, final MogileFS mogileFS) throws MogileException {
 
 		File file = new File(filename);
 		System.out.println("storing " + file + " as " + key + " to " + mogileFS);
