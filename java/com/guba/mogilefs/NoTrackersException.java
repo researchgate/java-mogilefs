@@ -13,6 +13,6 @@ package com.guba.mogilefs;
  */
 public class NoTrackersException extends MogileException {
 
-    private static final long serialVersionUID = -1925552817945446104L;
+	private static final long serialVersionUID = 1L;
 
 }

@@ -5,7 +5,7 @@
  */
 package com.guba.mogilefs.test;
 
-import org.apache.log4j.BasicConfigurator;
+import org.junit.Test;
 
 import com.guba.mogilefs.MogileFS;
 import com.guba.mogilefs.PooledMogileFSImpl;
@@ -16,11 +16,8 @@ import com.guba.mogilefs.PooledMogileFSImpl;
  */
 public class TestListKeys {
 
-	//    private static Logger log = Logger.getLogger(TestMogileFS.class);
-
-	public static void main(final String[] args) {
-		BasicConfigurator.configure();
-
+	@Test
+	public void testListKeys() {
 		try {
 			MogileFS mfs = new PooledMogileFSImpl("fab40",
 					new String[] { "fab2:6001" }, 5, 5, 10000);
@@ -35,5 +32,4 @@ public class TestListKeys {
 			//log.error("top level exception", e);
 		}
 	}
-
 }

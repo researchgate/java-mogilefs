@@ -13,35 +13,35 @@ package com.guba.mogilefs;
  */
 public class MogileException extends Exception {
 
-    private static final long serialVersionUID = -6737817547677933860L;
+	private static final long serialVersionUID = -6737817547677933860L;
 
-    /**
-     *  
-     */
-    public MogileException() {
-        super();
-    }
+	/**
+	 * 
+	 */
+	public MogileException() {
+		super();
+	}
 
-    /**
-     * @param message
-     */
-    public MogileException(String message) {
-        super(message);
-    }
+	/**
+	 * @param message
+	 */
+	public MogileException(final String message) {
+		super(message);
+	}
 
-    /**
-     * @param message
-     * @param cause
-     */
-    public MogileException(String message, Throwable cause) {
-        super(message, cause);
-    }
+	/**
+	 * @param message
+	 * @param cause
+	 */
+	public MogileException(final String message, final Throwable cause) {
+		super(message, cause);
+	}
 
-    /**
-     * @param cause
-     */
-    public MogileException(Throwable cause) {
-        super(cause);
-    }
+	/**
+	 * @param cause
+	 */
+	public MogileException(final Throwable cause) {
+		super(cause);
+	}
 
 }
