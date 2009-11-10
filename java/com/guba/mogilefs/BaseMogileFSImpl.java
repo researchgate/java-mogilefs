@@ -10,8 +10,6 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.channels.FileChannel;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -223,25 +221,20 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 								response.get("fid"),
 								response.get("path"), response
 								.get("devid"), key, file.length());
-						try {
-							FileInputStream in = new FileInputStream(file);
-							try {
-								SocketChannel socketChannel = out.getChannel();
-								FileChannel fileChannel = in.getChannel();
-								long position = 0;
-								long count = file.length();
-								while(position < count) {
-									position += fileChannel.transferTo(position, count - position, socketChannel);
-								}
 
-								// success!
-								return;
-							} finally {
-								in.close();
-							}
-						} finally {
-							out.close();
+						FileInputStream in = new FileInputStream(file);
+						byte[] buffer = new byte[4096];
+						int count = 0;
+						while ((count = in.read(buffer)) >= 0) {
+							out.write(buffer, 0, count);
 						}
+
+						out.close();
+						in.close();
+
+						// success!
+						return;
+
 					} catch (MalformedURLException e) {
 						// hrmm.. this shouldn't happen - we'll blame it on the tracker
 						log.warn("error trying to retrieve file with malformed url: " +  response.get("path"));
@@ -277,7 +270,6 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 
 		throw new MogileException("Unable to store file on mogile after multiple attempts");
 	}
-
 	/**
 	 * Read in an file and store it in the provided file. Return
 	 * the reference to the file, or null if we couldn't find the
