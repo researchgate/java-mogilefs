@@ -578,14 +578,6 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 		throw new NoTrackersException();
 	}
 
-	public Object[] listKeys(final String key) throws NoTrackersException {
-		return listKeys(key,null,1000);
-	}
-
-	public Object[] listKeys(final String key, final int limit) throws NoTrackersException {
-		return listKeys(key,null,limit);
-	}
-
 	/**
 	 * Return the after key and a list of keys matching your key. Return
 	 * null if there was an error from the server.
@@ -640,6 +632,14 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 		}
 
 		throw new NoTrackersException();
+	}
+
+	public Object[] listKeys(final String key) throws NoTrackersException {
+		return listKeys(key,null,1000);
+	}
+
+	public Object[] listKeys(final String key, final int limit) throws NoTrackersException {
+		return listKeys(key,null,limit);
 	}
 
 

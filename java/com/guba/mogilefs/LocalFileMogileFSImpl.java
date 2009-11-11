@@ -171,14 +171,6 @@ public class LocalFileMogileFSImpl implements MogileFS {
 		return new String[] { "file://" + storedFile.getAbsolutePath() };
 	}
 
-	public Object[] listKeys(final String key) throws NoTrackersException {
-		throw new UnsupportedOperationException();
-	}
-
-	public Object[] listKeys(final String key, final int limit) throws NoTrackersException {
-		throw new UnsupportedOperationException();
-	}
-
 	/**
 	 * Return the after key and a list of keys matching your key. Return
 	 * null if there was an error from the server.
@@ -191,8 +183,27 @@ public class LocalFileMogileFSImpl implements MogileFS {
 		throw new UnsupportedOperationException();
 	}
 
+	public Object[] listKeys(final String key) throws NoTrackersException {
+		return listKeys(key,null,1000);
+	}
+
+	public Object[] listKeys(final String key, final int limit) throws NoTrackersException {
+		return listKeys(key,null,limit);
+	}
+
+
 	public String getDomain() {
 		return domain;
+	}
+
+	@Override
+	public void setMaxRetries(final int maxRetries) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void setRetryTimeout(final int retrySleepTime) {
+		throw new UnsupportedOperationException();
 	}
 
 }

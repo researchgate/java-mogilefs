@@ -154,4 +154,21 @@ public interface MogileFS {
 	 */
 	public abstract String getDomain();
 
+	/**
+	 * Set the max number of times to try retry storing a file with 'storeFile' or
+	 * deleting a file with 'delete'. If this is -1, then never stop retrying. This value
+	 * defaults to -1.
+	 * 
+	 * @param maxRetries
+	 */
+	public void setMaxRetries(final int maxRetries);
+
+	/**
+	 * After a failed 'storeFile' request, sleep for this number of milliseconds before
+	 * retrying the store. Defaults to 2 seconds.
+	 * 
+	 * @param retrySleepTime
+	 */
+	public void setRetryTimeout(final int retrySleepTime);
+
 }
