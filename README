@@ -1,17 +1,17 @@
 Java client library for MogileFS (http://www.danga.com/mogilefs/). Code
 is mostly a copy of the perl client.
 
-This is a fork of eml's MogileFS Java client with fixes pulled from ash2k and 
-davidheldon's tree. 
+This is a fork of eml's MogileFS Java client with fixes pulled from ash2k and
+davidheldon's tree.
 
 This branch has the following improvements:
 
 - list_keys MogileFS support.
 - Java Generics.
 - SLF4J Logging, no hard dependency on Log4J.
-- JUnit testing. 
+- JUnit testing.
 - Merged bug fixes from ash2k and davidheldon's forks.
-- Add streaming upload support.
+- Streaming upload support.
 
 Choose one of the classes in com.guba.mogilefs that implements
 the MogileFS interface:
