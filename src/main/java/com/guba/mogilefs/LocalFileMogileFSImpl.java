@@ -1,15 +1,9 @@
 package com.guba.mogilefs;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.*;
 
 public class LocalFileMogileFSImpl implements MogileFS {
 
@@ -196,14 +190,15 @@ public class LocalFileMogileFSImpl implements MogileFS {
 		return domain;
 	}
 
-	@Override
 	public void setMaxRetries(final int maxRetries) {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
 	public void setRetryTimeout(final int retrySleepTime) {
 		throw new UnsupportedOperationException();
 	}
 
+    public void storeStream(String key, String storageClass, InputStream is, long fileSize)
+            throws MogileException {
+    }
 }

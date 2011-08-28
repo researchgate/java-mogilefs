@@ -18,7 +18,7 @@ public class TestStore {
 		try {
 			MogileFS mfs = new LocalFileMogileFSImpl(new File("."), "emloffice.guba.com");
 
-			File file = new File("java/com/guba/mogilefs/PooledMogileFSImpl.java");
+			File file = new File("src/main/java/com/guba/mogilefs/PooledMogileFSImpl.java");
 			int count = 2;
 
 			for (int i = 0; i < count; i++) {

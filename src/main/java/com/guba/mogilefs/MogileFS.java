@@ -35,6 +35,11 @@ public interface MogileFS {
 			long byteCount) throws NoTrackersException,
 			TrackerCommunicationException, StorageCommunicationException;
 
+
+    
+    public abstract void storeStream(final String key, final String storageClass, final InputStream is, long fileSize)
+            throws MogileException;
+
 	/**
 	 * Copy the given file to mogile.
 	 * 
