@@ -198,9 +198,10 @@ public abstract class BaseMogileFSImpl implements MogileFS {
         this.retrySleepTime = retrySleepTime;
     }
 
+
     public void storeStream(final String key, final String storageClass, final InputStream is, long fileSize)
             throws MogileException {
-        storeStream(key, storageClass, is, fileSize, 500);
+        storeStream(key, storageClass, is, fileSize, 0);
     }
 
     public void storeStream(final String key, final String storageClass, final InputStream is, long fileSize,
