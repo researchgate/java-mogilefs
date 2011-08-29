@@ -237,6 +237,8 @@ public abstract class BaseMogileFSImpl implements MogileFS {
                         // Fill in the empty bytes if size of the outputstream is slightly less than defined.
                         // If below 300 bytes just write it out, post length was fuzzy
                         if ((fileSize - writtenOut) <= sizePadding) {
+                            log.warn(String.format("File size mismatch, %s bytes short, applying padding",
+                                    (fileSize - writtenOut)));
                             while (writtenOut <= fileSize) {
                                 writtenOut += 1;
                                 out.write('\0');
