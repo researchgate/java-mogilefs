@@ -26,7 +26,7 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 
     private ObjectPool cachedBackendPool;
 
-    private int maxRetries = -1;
+    private int maxRetries = 2;
     private int retrySleepTime = 2000;
 
     /* Should we preserve the order of paths that we get from the server. */
