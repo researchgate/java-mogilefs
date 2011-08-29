@@ -59,7 +59,6 @@ public class PooledMogileFSImpl extends BaseMogileFSImpl {
                               final boolean shouldKeepPathOrder)
             throws NoTrackersException, BadHostFormatException {
         super(domain, trackerStrings, shouldKeepPathOrder);
-
         setMaxRetries(maxRetries);
         this.maxIdleConnections = maxIdleConnections;
         this.maxTrackerConnections = maxTrackerConnections;

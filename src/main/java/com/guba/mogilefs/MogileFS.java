@@ -176,5 +176,4 @@ public interface MogileFS {
      * @param retrySleepTime
      */
     public void setRetryTimeout(final int retrySleepTime);
-
 }

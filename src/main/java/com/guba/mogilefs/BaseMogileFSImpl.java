@@ -35,6 +35,8 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 
     private int maxRetries = 2;
     private int retrySleepTime = 2000;
+    private int httpConnectionTimeout = 8 * 1000;
+    private int httpSocketTimeout = 60 * 1000;
 
     /* Should we preserve the order of paths that we get from the server. */
     private boolean keepPathOrder;
@@ -183,6 +185,13 @@ public abstract class BaseMogileFSImpl implements MogileFS {
         }
     }
 
+    public void setHttpConnectionTimeout(int httpConnectionTimeout) {
+        this.httpConnectionTimeout = httpConnectionTimeout;
+    }
+
+    public void setHttpSocketTimeout(int httpSocketTimeout) {
+        this.httpSocketTimeout = httpSocketTimeout;
+    }
 
     /**
      * Set the max number of times to try retry storing a file with 'storeFile' or
@@ -236,11 +245,8 @@ public abstract class BaseMogileFSImpl implements MogileFS {
                         String devid = response.get("devid");
 
                         HttpParams httpParameters = new BasicHttpParams();
-                        // Set the timeout in milliseconds until a connection is established.
-                        int timeoutConnection = 8 * 1000;
-                        HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
-                        int timeoutSocket = 60 * 1000;
-                        HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
+                        HttpConnectionParams.setConnectionTimeout(httpParameters, httpConnectionTimeout);
+                        HttpConnectionParams.setSoTimeout(httpParameters, httpSocketTimeout);
 
                         HttpClient client = new ContentEncodingHttpClient(httpParameters);
                         HttpPut putReq = new HttpPut(path);
