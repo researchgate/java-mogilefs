@@ -5,6 +5,9 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.ContentEncodingHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -232,13 +235,22 @@ public abstract class BaseMogileFSImpl implements MogileFS {
                         String fid = response.get("fid");
                         String devid = response.get("devid");
 
-                        HttpClient client = new ContentEncodingHttpClient();
+                        HttpParams httpParameters = new BasicHttpParams();
+                        // Set the timeout in milliseconds until a connection is established.
+                        int timeoutConnection = 8 * 1000;
+                        HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
+                        int timeoutSocket = 60 * 1000;
+                        HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
+
+                        HttpClient client = new ContentEncodingHttpClient(httpParameters);
                         HttpPut putReq = new HttpPut(path);
                         InputStreamEntity ent = new InputStreamEntity(is, fileSize);
+
                         ent.setContentType("binary/octet-stream");
                         if (fileSize < 0) {
                             ent.setChunked(true);
                         }
+
                         putReq.setEntity(ent);
                         client.execute(putReq);
 
