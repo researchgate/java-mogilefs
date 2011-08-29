@@ -1,6 +1,10 @@
 package com.guba.mogilefs;
 
 import org.apache.commons.pool.ObjectPool;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.impl.client.ContentEncodingHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -199,13 +203,14 @@ public abstract class BaseMogileFSImpl implements MogileFS {
     }
 
 
-    public void storeStream(final String key, final String storageClass, final InputStream is, long fileSize)
+    public void storeStream(final String key, final String storageClass, final InputStream is)
             throws MogileException {
-        storeStream(key, storageClass, is, fileSize, 0);
+        // chunked
+        storeStream(key, storageClass, is, -1);
     }
 
-    public void storeStream(final String key, final String storageClass, final InputStream is, long fileSize,
-                            long sizePadding) throws MogileException {
+    public void storeStream(final String key, final String storageClass, final InputStream is, final long fileSize)
+            throws MogileException {
         int attempt = 1;
 
         Backend backend = null;
@@ -223,32 +228,29 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 
                 } else {
                     try {
-                        MogileOutputStream out = new MogileOutputStream(getBackendPool(), domain,
-                                response.get("fid"),
-                                response.get("path"), response
-                                .get("devid"), key, fileSize);
+                        String path = response.get("path");
+                        String fid = response.get("fid");
+                        String devid = response.get("devid");
 
-                        byte[] buffer = new byte[4096];
-                        int count = 0;
-                        int writtenOut = 0;
-                        while ((count = is.read(buffer)) >= 0) {
-                            writtenOut += count;
-                            out.write(buffer, 0, count);
+                        HttpClient client = new ContentEncodingHttpClient();
+                        HttpPut putReq = new HttpPut(path);
+                        InputStreamEntity ent = new InputStreamEntity(is, fileSize);
+                        ent.setContentType("binary/octet-stream");
+                        if (fileSize < 0) {
+                            ent.setChunked(true);
                         }
-                        // Fill in the empty bytes if size of the outputstream is slightly less than defined.
-                        // If below 300 bytes just write it out, post length was fuzzy
-                        if ((fileSize - writtenOut) <= sizePadding) {
-                            log.warn(String.format("File size mismatch, %s bytes short, applying padding",
-                                    (fileSize - writtenOut)));
-                            while (writtenOut <= fileSize) {
-                                writtenOut += 1;
-                                out.write('\0');
-                            }
-                        }
+                        putReq.setEntity(ent);
+                        client.execute(putReq);
 
-
-                        out.close();
                         is.close();
+
+                        Map<String, String> closeResponse = backend.doRequest("create_close", new String[]{
+                                "fid", fid, "devid", devid, "domain", domain, "size",
+                                Long.toString(ent.getContentLength()), "key", key, "path", path});
+
+                        if (closeResponse == null) {
+                            throw new IOException(backend.getLastErrStr());
+                        }
 
                         // success!
                         return;
@@ -263,7 +265,7 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 
                 }
 
-            } catch (MogileException e) {
+            } catch (Exception e) {
                 log.warn("problem trying to store file on mogile", e);
 
                 // something went wrong - get rid of the Backend object
@@ -292,7 +294,7 @@ public abstract class BaseMogileFSImpl implements MogileFS {
     public void storeFile(final String key, final String storageClass, final File file) throws MogileException {
         try {
             FileInputStream in = new FileInputStream(file);
-            storeStream(key, storageClass, in, file.length(), 0);
+            storeStream(key, storageClass, in, file.length());
         } catch (IOException e) {
             log.warn("error trying to store file", e);
         }

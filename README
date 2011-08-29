@@ -13,6 +13,7 @@ This branch has the following improvements:
 - JUnit testing.
 - Merged bug fixes from ash2k and davidheldon's forks.
 - Streaming upload support.
+- Chunked PUT support.
 - Updated to use maven.
 
 Choose one of the classes in com.guba.mogilefs that implements

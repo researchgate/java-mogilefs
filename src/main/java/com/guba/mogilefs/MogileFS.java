@@ -35,8 +35,8 @@ public interface MogileFS {
             TrackerCommunicationException, StorageCommunicationException;
 
 
-    public abstract void storeStream(final String key, final String storageClass, final InputStream is, long fileSize,
-                                     long sizePadding) throws MogileException;
+    public abstract void storeStream(final String key, final String storageClass, final InputStream is)
+            throws MogileException;
 
     public abstract void storeStream(final String key, final String storageClass, final InputStream is, long fileSize)
             throws MogileException;
