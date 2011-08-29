@@ -198,6 +198,10 @@ public class LocalFileMogileFSImpl implements MogileFS {
 		throw new UnsupportedOperationException();
 	}
 
+    public void storeStream(String key, String storageClass, InputStream is, long fileSize,
+                            long sizePadding) throws MogileException {
+    }
+
     public void storeStream(String key, String storageClass, InputStream is, long fileSize)
             throws MogileException {
     }

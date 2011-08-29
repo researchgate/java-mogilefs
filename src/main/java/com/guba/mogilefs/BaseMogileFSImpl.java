@@ -32,11 +32,13 @@ public abstract class BaseMogileFSImpl implements MogileFS {
     /* Should we preserve the order of paths that we get from the server. */
     private boolean keepPathOrder;
 
-    public BaseMogileFSImpl(final String domain, final String[] trackerStrings) throws BadHostFormatException, NoTrackersException {
+    public BaseMogileFSImpl(final String domain, final String[] trackerStrings)
+            throws BadHostFormatException, NoTrackersException {
         this(domain, trackerStrings, false);
     }
 
-    public BaseMogileFSImpl(final String domain, final String[] trackerStrings, final boolean shouldKeepPathOrder) throws BadHostFormatException, NoTrackersException {
+    public BaseMogileFSImpl(final String domain, final String[] trackerStrings, final boolean shouldKeepPathOrder)
+            throws BadHostFormatException, NoTrackersException {
         keepPathOrder = shouldKeepPathOrder;
         trackers = parseHosts(trackerStrings);
 
@@ -46,7 +48,7 @@ public abstract class BaseMogileFSImpl implements MogileFS {
     /**
      * Parse the host strings to InetSocketAddress objects. If something can't
      * be parsed, an exception is thrown.
-     * 
+     *
      * @param hostStrings array of host:port string pairs
      * @return a List of InetSocketAddress objects.
      * @throws BadHostFormatException if one of the strings isn't in the right format.
@@ -79,12 +81,13 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 
     /**
      * Set things up again.
-     * 
+     *
      * @param domain
      * @param trackerStrings
      * @throws NoTrackersException
      */
-    public void reload(final String domain, final String trackerStrings[]) throws NoTrackersException, BadHostFormatException {
+    public void reload(final String domain, final String trackerStrings[])
+            throws NoTrackersException, BadHostFormatException {
         this.trackers = parseHosts(trackerStrings);
 
         reload(domain);
@@ -92,7 +95,6 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 
     /**
      * This is called whenever we get a new domain or set of trackers to connect to.
-     *
      */
 
     protected void reload(final String domain) throws NoTrackersException {
@@ -118,21 +120,22 @@ public abstract class BaseMogileFSImpl implements MogileFS {
      * Get a ref to an OutputStream so you can store a new file. The original
      * implementation returns null on an error, but this one throws an exception
      * if something goes wrong, so null is never returned.
-     * 
-     * @param key name to give the new file
+     *
+     * @param key          name to give the new file
      * @param storageClass the class to store it under
-     * @param byteCount the size of the new file (needed for content-length header
+     * @param byteCount    the size of the new file (needed for content-length header
      * @return non-null stream you should write byteCount bytes to
      */
-    public OutputStream newFile(final String key, final String storageClass, final long byteCount) throws NoTrackersException, TrackerCommunicationException, StorageCommunicationException {
+    public OutputStream newFile(final String key, final String storageClass, final long byteCount)
+            throws NoTrackersException, TrackerCommunicationException, StorageCommunicationException {
         Backend backend = null;
 
         try {
             // get a backend
             backend = borrowBackend();
 
-            Map<String,String> response = backend.doRequest("create_open", new String[] {
-                "domain", domain, "class", storageClass, "key", key });
+            Map<String, String> response = backend.doRequest("create_open", new String[]{
+                    "domain", domain, "class", storageClass, "key", key});
 
             if (response == null) {
                 throw new TrackerCommunicationException(backend.getLastErr() + ", " + backend.getLastErrStr());
@@ -150,8 +153,9 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 
             } catch (MalformedURLException e) {
                 // hrmm.. this shouldn't happen - we'll blame it on the tracker
-                log.warn("error trying to store file with malformed url: " +  response.get("path"));
-                throw new TrackerCommunicationException("error trying to store file with malformed url: " + response.get("path"));
+                log.warn("error trying to store file with malformed url: " + response.get("path"));
+                throw new TrackerCommunicationException(
+                        "error trying to store file with malformed url: " + response.get("path"));
 
             }
 
@@ -177,7 +181,7 @@ public abstract class BaseMogileFSImpl implements MogileFS {
      * Set the max number of times to try retry storing a file with 'storeFile' or
      * deleting a file with 'delete'. If this is -1, then never stop retrying. This value
      * defaults to -1.
-     * 
+     *
      * @param maxRetries
      */
     public void setMaxRetries(final int maxRetries) {
@@ -187,14 +191,20 @@ public abstract class BaseMogileFSImpl implements MogileFS {
     /**
      * After a failed 'storeFile' request, sleep for this number of milliseconds before
      * retrying the store. Defaults to 2 seconds.
-     * 
+     *
      * @param retrySleepTime
      */
     public void setRetryTimeout(final int retrySleepTime) {
         this.retrySleepTime = retrySleepTime;
     }
 
-    public void storeStream(final String key, final String storageClass, final InputStream is, long fileSize) throws MogileException {
+    public void storeStream(final String key, final String storageClass, final InputStream is, long fileSize)
+            throws MogileException {
+        storeStream(key, storageClass, is, fileSize, 500);
+    }
+
+    public void storeStream(final String key, final String storageClass, final InputStream is, long fileSize,
+                            long sizePadding) throws MogileException {
         int attempt = 1;
 
         Backend backend = null;
@@ -204,7 +214,7 @@ public abstract class BaseMogileFSImpl implements MogileFS {
                 backend = borrowBackend();
 
                 Map<String, String> response = backend.doRequest("create_open", new String[]{
-                    "domain", domain, "class", storageClass, "key", key});
+                        "domain", domain, "class", storageClass, "key", key});
 
                 if (response == null) {
                     log.warn("problem talking to backend: " + backend.getLastErrStr() + " (err: "
@@ -226,13 +236,13 @@ public abstract class BaseMogileFSImpl implements MogileFS {
                         }
                         // Fill in the empty bytes if size of the outputstream is slightly less than defined.
                         // If below 300 bytes just write it out, post length was fuzzy
-                        if((fileSize - writtenOut) < 300) {
-                            while(writtenOut <= fileSize) {
+                        if ((fileSize - writtenOut) <= sizePadding) {
+                            while (writtenOut <= fileSize) {
                                 writtenOut += 1;
                                 out.write('\0');
                             }
                         }
-                        
+
 
                         out.close();
                         is.close();
@@ -279,22 +289,24 @@ public abstract class BaseMogileFSImpl implements MogileFS {
     public void storeFile(final String key, final String storageClass, final File file) throws MogileException {
         try {
             FileInputStream in = new FileInputStream(file);
-            storeStream(key, storageClass, in, file.length());
+            storeStream(key, storageClass, in, file.length(), 0);
         } catch (IOException e) {
             log.warn("error trying to store file", e);
         }
     }
+
     /**
      * Read in an file and store it in the provided file. Return
      * the reference to the file, or null if we couldn't find the
      * object with the given key
-     * 
+     *
      * @param key
      * @param destination
      * @throws NoTrackersException
      * @throws TrackerCommunicationException
      */
-    public File getFile(final String key, final File destination) throws NoTrackersException, TrackerCommunicationException, IOException, StorageCommunicationException {
+    public File getFile(final String key, final File destination)
+            throws NoTrackersException, TrackerCommunicationException, IOException, StorageCommunicationException {
         InputStream in = getFileStream(key);
 
         if (in == null) {
@@ -318,7 +330,8 @@ public abstract class BaseMogileFSImpl implements MogileFS {
         return destination;
     }
 
-    public byte[] getFileBytes(final String key) throws NoTrackersException, TrackerCommunicationException, IOException, StorageCommunicationException {
+    public byte[] getFileBytes(final String key)
+            throws NoTrackersException, TrackerCommunicationException, IOException, StorageCommunicationException {
         // pull in the paths for this file
         String paths[] = getPaths(key, false);
 
@@ -377,11 +390,12 @@ public abstract class BaseMogileFSImpl implements MogileFS {
      * Retrieve the data from some file. Return null if the file doesn't
      * exist, or throw an exception if we just can't get it from any
      * of the storage nodes
-     * 
+     *
      * @param key
      * @return
      */
-    public InputStream getFileStream(final String key) throws NoTrackersException, TrackerCommunicationException, StorageCommunicationException {
+    public InputStream getFileStream(final String key)
+            throws NoTrackersException, TrackerCommunicationException, StorageCommunicationException {
         // pull in the paths for this file
         String paths[] = getPaths(key, false);
 
@@ -419,12 +433,13 @@ public abstract class BaseMogileFSImpl implements MogileFS {
             pathString.append(paths[i]);
         }
 
-        throw new StorageCommunicationException("unable to retrieve file with key '" + key + "' from any storage node: " + pathString);
+        throw new StorageCommunicationException(
+                "unable to retrieve file with key '" + key + "' from any storage node: " + pathString);
     }
 
     /**
      * Delete the given file. A non-existant file will not cause an error.
-     * 
+     *
      * @param key
      * @throws NoTrackersException
      */
@@ -436,7 +451,7 @@ public abstract class BaseMogileFSImpl implements MogileFS {
         while ((maxRetries == -1) || (attempt++ <= maxRetries)) {
             try {
                 backend = borrowBackend();
-                backend.doRequest("delete", new String[] { "domain", domain, "key", key });
+                backend.doRequest("delete", new String[]{"domain", domain, "key", key});
 
                 return;
 
@@ -467,13 +482,16 @@ public abstract class BaseMogileFSImpl implements MogileFS {
      */
     private void retrySleep() {
         if (retrySleepTime > 0) {
-            try { Thread.sleep(retrySleepTime); } catch (Exception e) {}
+            try {
+                Thread.sleep(retrySleepTime);
+            } catch (Exception e) {
+            }
         }
     }
 
     /**
      * Tell the server to sleep for a few seconds.
-     * 
+     *
      * @throws NoTrackersException
      */
     public void sleep(final int seconds) throws NoTrackersException, TrackerCommunicationException {
@@ -481,8 +499,8 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 
         try {
             backend = borrowBackend();
-            backend.doRequest("sleep", new String[] { "duration",
-                Integer.toString(seconds) });
+            backend.doRequest("sleep", new String[]{"duration",
+                    Integer.toString(seconds)});
 
         } finally {
             if (backend != null) {
@@ -495,7 +513,7 @@ public abstract class BaseMogileFSImpl implements MogileFS {
     /**
      * Rename the given key. Note that you won't get an error if the key doesn't
      * exist.
-     * 
+     *
      * @param fromKey
      * @param toKey
      * @throws NoTrackersException
@@ -509,8 +527,8 @@ public abstract class BaseMogileFSImpl implements MogileFS {
             try {
                 backend = borrowBackend();
 
-                backend.doRequest("rename", new String[] { "domain", domain,
-                    "from_key", fromKey, "to_key", toKey });
+                backend.doRequest("rename", new String[]{"domain", domain,
+                        "from_key", fromKey, "to_key", toKey});
 
                 return;
 
@@ -538,10 +556,10 @@ public abstract class BaseMogileFSImpl implements MogileFS {
     /**
      * Return a list of URL's that specify where this file is stored. Return
      * null if there was an error from the server.
-     * 
+     *
      * @param key
      * @param noverify If true, then ask the server not to bother checking that the
-     *           paths it's going to return are valid.
+     *                 paths it's going to return are valid.
      * @return array of Strings that are URLs that specify where this file is
      *         stored, or null if there was an error
      * @throws NoTrackersException
@@ -555,8 +573,8 @@ public abstract class BaseMogileFSImpl implements MogileFS {
             try {
                 backend = borrowBackend();
 
-                Map<String,String> response = backend.doRequest("get_paths", new String[] { "domain",
-                    domain, "key", key, "noverify", (noverify ? "1" : "0") });
+                Map<String, String> response = backend.doRequest("get_paths", new String[]{"domain",
+                        domain, "key", key, "noverify", (noverify ? "1" : "0")});
 
                 if (response == null) {
                     return null;
@@ -595,7 +613,7 @@ public abstract class BaseMogileFSImpl implements MogileFS {
     /**
      * Return the after key and a list of keys matching your key. Return
      * null if there was an error from the server.
-     * 
+     *
      * @param key
      * @return array of after key and array of keys
      * @throws NoTrackersException
@@ -609,8 +627,8 @@ public abstract class BaseMogileFSImpl implements MogileFS {
             try {
                 backend = borrowBackend();
 
-                Map<String,String> response = backend.doRequest("list_keys", new String[] { "domain",
-                    domain, "prefix", key, "after", after == null ? "" : after });
+                Map<String, String> response = backend.doRequest("list_keys", new String[]{"domain",
+                        domain, "prefix", key, "after", after == null ? "" : after});
 
                 if (response == null) {
                     return null;
@@ -618,12 +636,12 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 
                 int keyCount = Integer.parseInt(response.get("key_count"));
                 String[] retKeys = new String[keyCount];
-                for(int i = 1; i <= keyCount; i++) {
-                    String retKey = response.get("key_"+i);
+                for (int i = 1; i <= keyCount; i++) {
+                    String retKey = response.get("key_" + i);
                     retKeys[i - 1] = retKey;
                 }
 
-                return new Object[] { retKeys, response.get("after_key") };
+                return new Object[]{retKeys, response.get("after_key")};
 
             } catch (TrackerCommunicationException e) {
                 log.warn(e.getMessage(), e);
@@ -641,7 +659,11 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 
             // something went wrong - so wait a little while before continuing
             if (retrySleepTime > 0) {
-                try { Thread.sleep(retrySleepTime); } catch (Exception e) {};
+                try {
+                    Thread.sleep(retrySleepTime);
+                } catch (Exception e) {
+                }
+                ;
             }
         }
 
@@ -649,11 +671,11 @@ public abstract class BaseMogileFSImpl implements MogileFS {
     }
 
     public Object[] listKeys(final String key) throws NoTrackersException {
-        return listKeys(key,null,1000);
+        return listKeys(key, null, 1000);
     }
 
     public Object[] listKeys(final String key, final int limit) throws NoTrackersException {
-        return listKeys(key,null,limit);
+        return listKeys(key, null, limit);
     }
 
 
@@ -666,13 +688,15 @@ public abstract class BaseMogileFSImpl implements MogileFS {
             ObjectPool backendPool = getBackendPool();
 
             if (log.isDebugEnabled()) {
-                log.debug("getting backend (active: " + backendPool.getNumActive() + ", idle: " + backendPool.getNumIdle() + ")");
+                log.debug("getting backend (active: " + backendPool.getNumActive() + ", idle: " +
+                        backendPool.getNumIdle() + ")");
             }
 
             final Backend backend = (Backend) backendPool.borrowObject();
 
             if (log.isDebugEnabled()) {
-                log.debug("got backend (active: " + backendPool.getNumActive() + ", idle: " + backendPool.getNumIdle() + ")");
+                log.debug("got backend (active: " + backendPool.getNumActive() + ", idle: " + backendPool.getNumIdle() +
+                        ")");
             }
 
             return backend;
@@ -688,13 +712,15 @@ public abstract class BaseMogileFSImpl implements MogileFS {
             ObjectPool backendPool = getBackendPool();
 
             if (log.isDebugEnabled()) {
-                log.debug("returning backend (active: " + backendPool.getNumActive() + ", idle: " + backendPool.getNumIdle() + ")");
+                log.debug("returning backend (active: " + backendPool.getNumActive() + ", idle: " +
+                        backendPool.getNumIdle() + ")");
             }
 
             backendPool.returnObject(backend);
 
             if (log.isDebugEnabled()) {
-                log.debug("returned backend (active: " + backendPool.getNumActive() + ", idle: " + backendPool.getNumIdle() + ")");
+                log.debug("returned backend (active: " + backendPool.getNumActive() + ", idle: " +
+                        backendPool.getNumIdle() + ")");
             }
 
         } catch (Exception e) {
@@ -708,13 +734,15 @@ public abstract class BaseMogileFSImpl implements MogileFS {
             ObjectPool backendPool = getBackendPool();
 
             if (log.isDebugEnabled()) {
-                log.debug("invalidating backend (active: " + backendPool.getNumActive() + ", idle: " + backendPool.getNumIdle() + ")");
+                log.debug("invalidating backend (active: " + backendPool.getNumActive() + ", idle: " +
+                        backendPool.getNumIdle() + ")");
             }
 
             backendPool.invalidateObject(backend);
 
             if (log.isDebugEnabled()) {
-                log.debug("invalidated backend (active: " + backendPool.getNumActive() + ", idle: " + backendPool.getNumIdle() + ")");
+                log.debug("invalidated backend (active: " + backendPool.getNumActive() + ", idle: " +
+                        backendPool.getNumIdle() + ")");
             }
 
         } catch (Exception e) {
@@ -722,7 +750,6 @@ public abstract class BaseMogileFSImpl implements MogileFS {
             log.warn("unable to invalidate backend", e);
         }
     }
-
 
 
 }
