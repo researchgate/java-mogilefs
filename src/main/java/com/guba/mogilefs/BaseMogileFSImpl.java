@@ -215,13 +215,14 @@ public abstract class BaseMogileFSImpl implements MogileFS {
     }
 
 
-    public void storeStream(final String key, final String storageClass, final InputStream is)
+    public MogileResponse storeStream(final String key, final String storageClass, final InputStream is)
             throws MogileException {
-        // chunked
-        storeStream(key, storageClass, is, -1);
+        // -1 for chunked
+        return storeStream(key, storageClass, is, -1);
     }
 
-    public void storeStream(final String key, final String storageClass, final InputStream is, final long fileSize)
+    public MogileResponse storeStream(final String key, final String storageClass, final InputStream is,
+                                      final long fileSize)
             throws MogileException {
         int attempt = 1;
 
@@ -244,6 +245,11 @@ public abstract class BaseMogileFSImpl implements MogileFS {
                         String fid = response.get("fid");
                         String devid = response.get("devid");
 
+                        MogileResponse mResp = new MogileResponse();
+                        mResp.setDevid(devid);
+                        mResp.setFid(fid);
+                        mResp.setPath(path);
+
                         HttpParams httpParameters = new BasicHttpParams();
                         HttpConnectionParams.setConnectionTimeout(httpParameters, httpConnectionTimeout);
                         HttpConnectionParams.setSoTimeout(httpParameters, httpSocketTimeout);
@@ -265,13 +271,15 @@ public abstract class BaseMogileFSImpl implements MogileFS {
                         Map<String, String> closeResponse = backend.doRequest("create_close", new String[]{
                                 "fid", fid, "devid", devid, "domain", domain, "size",
                                 Long.toString(ent.getContentLength()), "key", key, "path", path});
+                        
+                        mResp.setFileSize(ent.getContentLength());
 
                         if (closeResponse == null) {
                             throw new IOException(backend.getLastErrStr());
                         }
 
                         // success!
-                        return;
+                        return mResp;
 
                     } catch (MalformedURLException e) {
                         // hrmm.. this shouldn't happen - we'll blame it on the tracker
@@ -309,13 +317,14 @@ public abstract class BaseMogileFSImpl implements MogileFS {
         throw new MogileException("Unable to store file on mogile after multiple attempts");
     }
 
-    public void storeFile(final String key, final String storageClass, final File file) throws MogileException {
+    public MogileResponse storeFile(final String key, final String storageClass, final File file) throws MogileException {
         try {
             FileInputStream in = new FileInputStream(file);
-            storeStream(key, storageClass, in, file.length());
+            return storeStream(key, storageClass, in, file.length());
         } catch (IOException e) {
             log.warn("error trying to store file", e);
         }
+        throw new MogileException("Unable to store file on mogile");
     }
 
     /**

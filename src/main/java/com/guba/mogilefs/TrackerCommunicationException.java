@@ -10,19 +10,18 @@ package com.guba.mogilefs;
  * shouldn't happen, and it indicates something is wrong with the tracker or
  * with our communication link to the tracker. The message should contain the
  * address of the tracker
- * 
+ *
  * @author ericlambrecht
- * 
  */
 public class TrackerCommunicationException extends MogileException {
 
-	private static final long serialVersionUID = 8151266363306339465L;
+    private static final long serialVersionUID = 8151266363306339465L;
 
-	public TrackerCommunicationException(final String message) {
-		super(message);
-	}
+    public TrackerCommunicationException(final String message) {
+        super(message);
+    }
 
-	public TrackerCommunicationException(final String message, final Throwable t) {
-		super(message, t);
-	}
+    public TrackerCommunicationException(final String message, final Throwable t) {
+        super(message, t);
+    }
 }

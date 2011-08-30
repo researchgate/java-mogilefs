@@ -7,14 +7,13 @@ package com.guba.mogilefs;
 
 /**
  * @author ericlambrecht
- * 
  */
 public class BadHostFormatException extends MogileException {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public BadHostFormatException(final String host) {
-		super(host);
-	}
+    public BadHostFormatException(final String host) {
+        super(host);
+    }
 
 }

@@ -35,14 +35,16 @@ public interface MogileFS {
             TrackerCommunicationException, StorageCommunicationException;
 
 
-    public abstract void storeStream(final String key, final String storageClass, final InputStream is)
+    public abstract MogileResponse storeStream(final String key, final String storageClass, final InputStream is)
             throws MogileException;
 
-    public abstract void storeStream(final String key, final String storageClass, final InputStream is, long fileSize)
+    public abstract MogileResponse storeStream(final String key, final String storageClass, final InputStream is,
+                                               long fileSize)
             throws MogileException;
 
     /**
      * Copy the given file to mogile.
+     *
      *
      * @param key
      * @param storageClass
@@ -50,7 +52,7 @@ public interface MogileFS {
      * @throws MogileException
      */
 
-    public abstract void storeFile(String key, String storageClass, File file)
+    public abstract MogileResponse storeFile(String key, String storageClass, File file)
             throws MogileException;
 
     /**

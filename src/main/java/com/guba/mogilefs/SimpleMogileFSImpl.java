@@ -9,45 +9,59 @@ import org.apache.commons.pool.PoolableObjectFactory;
  * safe, and should really only be used for testing purposes. For all
  * intents and purposes, the PooledMogileFSImpl is what you want to
  * use in all situations.
- * 
- * @author ericlambrecht
  *
+ * @author ericlambrecht
  */
 
 public class SimpleMogileFSImpl extends BaseMogileFSImpl {
 
-	public SimpleMogileFSImpl(final String domain, final String[] trackerStrings) throws BadHostFormatException, NoTrackersException {
-		super(domain, trackerStrings);
-	}
+    public SimpleMogileFSImpl(final String domain, final String[] trackerStrings)
+            throws BadHostFormatException, NoTrackersException {
+        super(domain, trackerStrings);
+    }
 
-	@Override
-	protected ObjectPool buildBackendPool() {
+    @Override
+    protected ObjectPool buildBackendPool() {
 
-		return new ObjectPool() {
+        return new ObjectPool() {
 
-			private Backend backend = null;
+            private Backend backend = null;
 
-			public void addObject() { }
+            public void addObject() {
+            }
 
-			public Object borrowObject() throws Exception {
-				if (backend == null) {
-					backend = new Backend(trackers, true);
-				}
+            public Object borrowObject() throws Exception {
+                if (backend == null) {
+                    backend = new Backend(trackers, true);
+                }
 
-				return backend;
-			}
+                return backend;
+            }
 
-			public void clear() { }
-			public void close() { }
-			public int getNumActive() { return 1; }
-			public int getNumIdle() { return 0; }
-			public void invalidateObject(final Object obj) {
-				backend = null;
-			}
+            public void clear() {
+            }
 
-			public void returnObject(final Object obj) { }
-			public void setFactory(final PoolableObjectFactory factory) { }
-		};
-	}
+            public void close() {
+            }
+
+            public int getNumActive() {
+                return 1;
+            }
+
+            public int getNumIdle() {
+                return 0;
+            }
+
+            public void invalidateObject(final Object obj) {
+                backend = null;
+            }
+
+            public void returnObject(final Object obj) {
+            }
+
+            public void setFactory(final PoolableObjectFactory factory) {
+            }
+        };
+    }
 
 }
