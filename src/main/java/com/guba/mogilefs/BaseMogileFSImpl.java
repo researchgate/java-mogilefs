@@ -3,7 +3,6 @@ package com.guba.mogilefs;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.ContentEncodingHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
@@ -256,23 +255,18 @@ public abstract class BaseMogileFSImpl implements MogileFS {
 
                         HttpClient client = new ContentEncodingHttpClient(httpParameters);
                         HttpPut putReq = new HttpPut(path);
-                        InputStreamEntity ent = new InputStreamEntity(is, fileSize);
-
-                        ent.setContentType("binary/octet-stream");
-                        if (fileSize < 0) {
-                            ent.setChunked(true);
-                        }
+                        MogileStreamEntity ent = new MogileStreamEntity(is, fileSize);
 
                         putReq.setEntity(ent);
                         client.execute(putReq);
-
+                        
                         is.close();
 
                         Map<String, String> closeResponse = backend.doRequest("create_close", new String[]{
                                 "fid", fid, "devid", devid, "domain", domain, "size",
-                                Long.toString(ent.getContentLength()), "key", key, "path", path});
-                        
-                        mResp.setFileSize(ent.getContentLength());
+                                Long.toString(ent.getBytesSent()), "key", key, "path", path});
+
+                        mResp.setFileSize(ent.getBytesSent());
 
                         if (closeResponse == null) {
                             throw new IOException(backend.getLastErrStr());
